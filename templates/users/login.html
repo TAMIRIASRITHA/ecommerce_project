@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- ✅ Modern Gradient Background -->
+<div style="
+    min-height:100vh; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center; 
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    padding:20px;
+">
+
+    <!-- ✅ Login Card -->
+    <div style="
+        width:100%; 
+        max-width:420px; 
+        background:#fff; 
+        border-radius:18px; 
+        padding:35px 40px; 
+        box-shadow:0 10px 30px rgba(0,0,0,0.25);
+        animation: floatUp 0.7s ease-out;
+    ">
+
+        <h2 style="
+            text-align:center; 
+            font-weight:700; 
+            margin-bottom:25px; 
+            color:#1f1c2c;
+        ">
+            Welcome Back 👋
+        </h2>
+
+        {% if message %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Email -->
+            <label style="font-weight:600; margin-bottom:6px;">Email</label>
+            <input type="email" name="email" required
+                style="
+                    width:100%;
+                    padding:12px 15px;
+                    margin-bottom:18px;
+                    border-radius:10px;
+                    border:1.5px solid #ccc;
+                    transition:0.3s;
+                "
+                onfocus="this.style.borderColor='#6c5ce7'"
+                onblur="this.style.borderColor='#ccc'"
+            >
+
+            <!-- Password -->
+            <label style="font-weight:600; margin-bottom:6px;">Password</label>
+            <input type="password" name="password" required
+                style="
+                    width:100%;
+                    padding:12px 15px;
+                    margin-bottom:22px;
+                    border-radius:10px;
+                    border:1.5px solid #ccc;
+                    transition:0.3s;
+                "
+                onfocus="this.style.borderColor='#6c5ce7'"
+                onblur="this.style.borderColor='#ccc'"
+            >
+
+            <!-- Login Button -->
+            <button type="submit"
+                style="
+                    width:100%;
+                    padding:12px;
+                    background:#6c5ce7;
+                    border:none;
+                    border-radius:10px;
+                    color:white;
+                    font-size:16px;
+                    font-weight:600;
+                    transition:0.3s;
+                    cursor:pointer;
+                    box-shadow:0 4px 14px rgba(0,0,0,0.1);
+                "
+                onmouseover="this.style.background='#5a4bd1'"
+                onmouseout="this.style.background='#6c5ce7'"
+            >
+                Login
+            </button>
+
+            <!-- Register Link -->
+            <div style="text-align:center; margin-top:15px;">
+                <a href="{% url 'users:register' %}"
+                    style="
+                        color:#1f1c2c;
+                        font-weight:600;
+                        text-decoration:none;
+                        transition:0.3s;
+                    "
+                    onmouseover="this.style.color='#6c5ce7'"
+                    onmouseout="this.style.color='#1f1c2c'"
+                >
+                    New user? Register here
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<!-- ✅ Animation -->
+<style>
+@keyframes floatUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0px); opacity: 1; }
+}
+</style>
+
+{% endblock %}

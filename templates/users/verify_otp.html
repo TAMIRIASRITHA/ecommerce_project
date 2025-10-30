@@ -1,0 +1,19 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="mb-4">Verify OTP</h1>
+{% if message %}
+<div class="alert alert-info">{{ message }}</div>
+{% if "expired" in message %}
+<a href="{% url 'users:register' %}" class="btn btn-secondary">Register Again</a>
+{% endif %}
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label">Enter OTP (sent to console/email)</label>
+        <input type="text" class="form-control" name="otp" placeholder="123456" maxlength="6" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Verify</button>
+</form>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .cart-card {
+        border-radius: .6rem;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
+    }
+
+    .cart-thumb {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: .4rem;
+    }
+
+    .qty-badge {
+        min-width: 48px;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .table-nowrap td,
+    .table-nowrap th {
+        white-space: nowrap;
+    }
+
+    .sticky-checkout {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        padding: 1rem 0;
+        border-top: 1px solid #e9ecef;
+    }
+</style>
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">🛒 Your Cart</h1>
+            <small class="text-muted">
+                {{ cart.items.count }} item{% if cart.items.count != 1 %}s{% endif %}
+            </small>
+        </div>
+    </div>
+
+    {% if cart.items.exists %}
+
+    <!-- DESKTOP VIEW -->
+    <div class="table-responsive d-none d-md-block mb-3">
+        <table class="table table-borderless table-nowrap align-middle cart-card">
+            <thead class="bg-light">
+                <tr>
+                    <th class="px-4">Product</th>
+                    <th class="text-center">Quantity</th>
+                    <th class="text-end">Price</th>
+                    <th class="text-end">Subtotal</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in cart.items.all %}
+                <tr class="align-middle">
+
+                    <!-- PRODUCT -->
+                    <td class="px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image }}" alt="{{ item.product.name }}" class="cart-thumb">
+                            {% else %}
+                                <div class="cart-thumb bg-light d-flex align-items-center justify-content-center text-muted">No Image</div>
+                            {% endif %}
+
+                            <div>
+                                <div class="fw-semibold">{{ item.product.name }}</div>
+                                {% if item.product.description %}
+                                    <small class="text-muted">{{ item.product.description|truncatechars:80 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- QUANTITY -->
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <a href="{% url 'cart:update_quantity' item.id %}?action=decrease"
+                                class="btn btn-sm btn-outline-danger">-</a>
+
+                            <span class="badge bg-secondary qty-badge">{{ item.quantity }}</span>
+
+                            <a href="{% url 'cart:update_quantity' item.id %}?action=increase"
+                                class="btn btn-sm btn-outline-success">+</a>
+                        </div>
+                    </td>
+
+                    <!-- PRICE -->
+                    <td class="text-end">${{ item.product.price|floatformat:2 }}</td>
+
+                    <!-- SUBTOTAL -->
+                    <td class="text-end fw-semibold">${{ item.subtotal|floatformat:2 }}</td>
+
+                    <!-- ACTION -->
+                    <td class="text-end">
+                        <a href="{% url 'cart:remove_from_cart' item.id %}" class="btn btn-outline-danger btn-sm">
+                            Remove
+                        </a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MOBILE VIEW -->
+    <div class="d-md-none">
+        <div class="row g-3">
+            {% for item in cart.items.all %}
+            <div class="col-12">
+                <div class="card cart-card p-2">
+
+                    <div class="d-flex gap-3">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image }}" alt="{{ item.product.name }}" class="cart-thumb">
+                        {% else %}
+                            <div class="cart-thumb bg-light d-flex align-items-center justify-content-center text-muted">No Image</div>
+                        {% endif %}
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">{{ item.product.name }}</div>
+                                    {% if item.product.description %}
+                                        <small class="text-muted">{{ item.product.description|truncatechars:60 }}</small>
+                                    {% endif %}
+                                </div>
+
+                                <div class="text-end">
+                                    <div class="fw-semibold">${{ item.subtotal|floatformat:2 }}</div>
+                                    <small class="text-muted">${{ item.product.price|floatformat:2 }}</small>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="badge bg-secondary">Qty: {{ item.quantity }}</span>
+                                <a href="{% url 'cart:remove_from_cart' item.id %}" class="btn btn-outline-danger btn-sm">Remove</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- CHECKOUT -->
+    <div class="sticky-checkout mt-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div>
+                <div class="text-muted">Estimated total</div>
+                <div class="h4 mb-0">${{ total|floatformat:2 }}</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">Continue Shopping</a>
+                <a href="{% url 'orders:checkout' %}" class="btn btn-success btn-lg">Proceed to Checkout</a>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- EMPTY CART -->
+    <div class="card cart-card p-4 text-center">
+        <h3 class="mb-2">Your cart is empty</h3>
+        <p class="text-muted mb-3">Browse products and add them to your cart. We'll keep them here for you.</p>
+        <a href="{% url 'products:product_list' %}" class="btn btn-primary">Shop Now</a>
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

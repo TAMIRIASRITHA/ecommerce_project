@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- HERO BANNER -->
+<div style="
+    height: 90vh;
+    width: 100%;
+    position: relative;
+    border-radius: 20px;
+    background-image: url('https://images.unsplash.com/photo-1587802659513-7748a6e21f0c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1171');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+">
+
+    <!-- Dark Overlay -->
+    <div style="
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.25);
+        border-radius: 20px;
+    "></div>
+
+    <!-- SHOP NOW BUTTON -->
+    <a href="{% url 'products:product_list' %}" 
+       style="
+           position: absolute;
+           bottom: 40px;        /* adjust up/down */
+           right: 0;
+           padding: 20px 80px;
+           background: black;
+           color: white;
+           font-size: 1.8rem;
+           font-weight: bold;
+           text-decoration: none;
+           border-radius: 50px 0 0 50px;
+           box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+       ">
+       SHOP NOW
+    </a>
+
+</div>
+
+{% endblock %}
