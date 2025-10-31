@@ -9,31 +9,36 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+import threading
 
 
-# ✅ EMAIL SENDING (safe)
+# ✅ EMAIL SENDING (NON-BLOCKING THREAD)
 def send_otp_email(recipient_email, otp_code):
-    subject = "Your OTP Code — My Ecom Site"
-    from_email = settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER
 
-    context = {
-        'otp': otp_code,
-        'site_name': 'My Ecom Site',
-        'expiry_minutes': 3,
-    }
+    def _send():
+        subject = "Your OTP Code — My Ecom Site"
+        from_email = settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER
 
-    html_content = render_to_string('emails/otp_email.html', context)
+        context = {
+            'otp': otp_code,
+            'site_name': 'My Ecom Site',
+            'expiry_minutes': 3,
+        }
 
-    try:
-        msg = EmailMessage(subject, html_content, from_email, [recipient_email])
-        msg.content_subtype = "html"
-        msg.send(fail_silently=False)
-        return True
-    except Exception:
-        return False
+        html_content = render_to_string('emails/otp_email.html', context)
+
+        try:
+            msg = EmailMessage(subject, html_content, from_email, [recipient_email])
+            msg.content_subtype = "html"
+            msg.send(fail_silently=True)
+        except Exception:
+            pass  # Prevent server crash
+
+    # ✅ Run email sending in background
+    threading.Thread(target=_send).start()
 
 
-# ✅ REGISTRATION
+# ✅ REGISTRATION VIEW
 def register_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -52,14 +57,8 @@ def register_view(request):
 
             request.session['email'] = user.email
 
-            # ✅ Send email safely
-            email_sent = send_otp_email(user.email, otp_code)
-
-            if not email_sent:
-                return render(request, 'users/register.html', {
-                    'form': form,
-                    'message': "Failed to send OTP. Please try again."
-                })
+            # ✅ Send OTP without blocking request
+            send_otp_email(user.email, otp_code)
 
             return redirect('users:verify_otp')
     else:
@@ -72,11 +71,10 @@ def register_view(request):
 def home_view(request):
     if not request.user.is_authenticated:
         return redirect('users:login')
-
     return render(request, 'users/home.html', {'user': request.user})
 
 
-# ✅ OTP VERIFY
+# ✅ VERIFY OTP
 def verify_otp_view(request):
     email = request.session.get('email')
     if not email:
@@ -88,22 +86,15 @@ def verify_otp_view(request):
 
     if request.method == 'POST':
         code = request.POST.get('otp')
-
         otp_obj = OTP.objects.filter(user=user, code=code).order_by('-created_at').first()
 
-        # ✅ OTP not found
         if not otp_obj:
-            return render(request, 'users/verify_otp.html', {
-                'message': 'Invalid OTP'
-            })
+            return render(request, 'users/verify_otp.html', {'message': 'Invalid OTP'})
 
-        # ✅ OTP expired
         if otp_obj.is_expired():
-            return render(request, 'users/verify_otp.html', {
-                'message': 'OTP is expired'
-            })
+            return render(request, 'users/verify_otp.html', {'message': 'OTP is expired'})
 
-        # ✅ OTP success → activate user
+        # ✅ Activate User
         user.is_active = True
         user.save()
         return redirect('users:login')
@@ -122,10 +113,10 @@ def login_view(request):
         if user:
             login(request, user)
             return redirect('users:home_view')
-        else:
-            return render(request, 'users/login.html', {
-                'message': 'Invalid email or password'
-            })
+
+        return render(request, 'users/login.html', {
+            'message': 'Invalid email or password'
+        })
 
     return render(request, 'users/login.html')
 
@@ -136,7 +127,7 @@ def logout_view(request):
     return redirect('users:login')
 
 
-# ✅ PROFILE (protected)
+# ✅ PROFILE
 @login_required
 def profile_view(request):
     if request.method == 'POST':
